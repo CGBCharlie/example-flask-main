@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Forecast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            text-align: center;
+            color: #f3852b; /* Predicted Sales Color */
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .container {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+            color: #645856; /* Grid Color */
+            font-size: 14px;
+        }
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: calc(100% - 22px);
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background-color: #fdc43d; /* Actual Sales Color */
+            color: white;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #f3852b; /* Predicted Sales Color */
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #645856; /* Confidence Interval Color */
+            display: none;
+        }
+        #result div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        #result span {
+            display: block;
+            margin-bottom: 8px;
+        }
+        #result span.label {
+            font-weight: 700;
+            color: #333;
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            margin-bottom: 4px;
+        }
+        .error {
+            color: red;
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inventory Forecast Calculator</h1>
+        <form id="inventoryForm">
+            <label for="product_id">Product ID:</label>
+            <input type="text" id="product_id" name="product_id" required>
+
+            <label for="current_inventory">Current Inventory (units):</label>
+            <input type="number" id="current_inventory" name="current_inventory" required>
+
+            <label for="month">Month:</label>
+            <select id="month" name="month" required>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+            </select>
+
+            <button type="submit">Calculate</button>
+        </form>
+
+        <div id="result">
+            <div><img src="https://img.icons8.com/ios-filled/50/000000/product.png" class="icon" alt="Product ID Icon"><span class="label">Product ID:</span> <span id="product_id_result"></span></div>
+            <div><img src="https://img.icons8.com/ios-filled/50/000000/name.png" class="icon" alt="Product Name Icon"><span class="label">Product Name:</span> <span id="product_name_result"></span></div>
+            <div><img src="https://img.icons8.com/ios-filled/50/000000/sales-performance.png" class="icon" alt="Predicted Sales Icon"><span class="label">Predicted Sales:</span> <span id="predicted_sales_result"></span></div>
+            <div><img src="https://img.icons8.com/ios-filled/50/000000/shopping-cart-loaded.png" class="icon" alt="Inventory to Buy Icon"><span class="label">Inventory to Buy:</span> <span id="inventory_to_buy_result"></span></div>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('inventoryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let productId = document.getElementById('product_id').value;
+            let currentInventory = document.getElementById('current_inventory').value;
+            let month = document.getElementById('month').value;
+
+            fetch('/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `product_id=${productId}&current_inventory=${currentInventory}&month=${month}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('error').innerText = data.error;
+                    document.getElementById('result').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                } else {
+                    document.getElementById('product_id_result').innerText = data.product_id;
+                    document.getElementById('product_name_result').innerText = data.product_name;
+                    document.getElementById('predicted_sales_result').innerText = data.predicted_sales;
+                    document.getElementById('inventory_to_buy_result').innerText = data.inventory_to_buy;
+                    document.getElementById('result').style.display = 'block';
+                    document.getElementById('error').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                document.getElementById('error').innerText = 'An error occurred. Please try again.';
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
